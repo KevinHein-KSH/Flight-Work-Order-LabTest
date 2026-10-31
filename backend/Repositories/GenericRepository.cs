@@ -30,9 +30,13 @@ namespace LabTest.Repositories
             await _context.Set<T>().AddAsync(entity);
         }
 
-        public async Task Update(T entity, object id)
+        public void Update(T entity)
         {
             _context.Set<T>().Update(entity);
+        }
+
+        public async Task SaveChangesAsync()
+        {
             await _context.SaveChangesAsync();
         }
     }
