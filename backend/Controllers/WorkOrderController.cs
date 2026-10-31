@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
+using LabTest.Models.DTOs;
 using LabTest.Services;
-using LabTest.backend.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LabTest.Backend.Controllers
+namespace LabTest.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

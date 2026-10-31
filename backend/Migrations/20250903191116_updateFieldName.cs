@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace backend.Migrations
+namespace LabTest.Migrations
 {
     /// <inheritdoc />
     public partial class updateFieldName : Migration

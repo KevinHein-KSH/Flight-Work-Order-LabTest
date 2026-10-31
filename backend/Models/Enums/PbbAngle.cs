@@ -1,4 +1,4 @@
-namespace LabTest.backend.Models.Enums
+namespace LabTest.Models.Enums
 {
     public enum PbbAngle
     {

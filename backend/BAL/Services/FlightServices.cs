@@ -6,9 +6,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using backend.Data;
-using LabTest.backend.Models.DTOs;
-using LabTest.backend.Models.Entities;
+using LabTest.Data;
+using LabTest.Models.DTOs;
+using LabTest.Models.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
@@ -205,7 +205,6 @@ namespace LabTest.Services
                 if (items != null)
                 {
                     int index = 0;
-                    Console.Out.WriteLine(items);
                     foreach (var model in items)
                     {
                         index++;

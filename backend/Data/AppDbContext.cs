@@ -1,7 +1,7 @@
-using LabTest.backend.Models.Entities;
+using LabTest.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Data
+namespace LabTest.Data
 {
     public class AppDbContext : DbContext
     {

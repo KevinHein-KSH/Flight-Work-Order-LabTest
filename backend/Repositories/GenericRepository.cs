@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using LabTest.Data;
+using LabTest.Repositories.IRepositories;
 using Microsoft.EntityFrameworkCore;
-using LabTest.backend.Repositories.IRepositories;
-using backend.Data;
 
-namespace backend.Repositories
+namespace LabTest.Repositories
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {

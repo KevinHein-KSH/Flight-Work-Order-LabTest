@@ -1,6 +1,6 @@
 using System;
 
-namespace LabTest.backend.Models.DTOs
+namespace LabTest.Models.DTOs
 {
     public class ResponseFlightModel
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace LabTest.backend.Repositories.IRepositories
+namespace LabTest.Repositories.IRepositories
 {
     public interface IGenericRepository<T> where T : class
     {

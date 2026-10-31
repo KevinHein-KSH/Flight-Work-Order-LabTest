@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LabTest.backend.Models.DTOs
+namespace LabTest.Models.DTOs
 {
     public class FlightWorkOrdersResponse
     {

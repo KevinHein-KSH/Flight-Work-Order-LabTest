@@ -1,8 +1,8 @@
-using backend.Data;
-using Microsoft.EntityFrameworkCore;
-using backend.Repositories;
-using LabTest.backend.Repositories.IRepositories;
+using LabTest.Data;
+using LabTest.Repositories;
+using LabTest.Repositories.IRepositories;
 using LabTest.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +14,6 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<FlightServices>();
 builder.Services.AddScoped<WorkOrderServices>();
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // CORS policy for frontend dev server
 builder.Services.AddCors(options =>

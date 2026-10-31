@@ -1,9 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using LabTest.backend.Models.Enums;
+using LabTest.Models.Enums;
 
-namespace LabTest.backend.Models.Entities
+namespace LabTest.Models.Entities
 {
     public class WorkOrder
     {

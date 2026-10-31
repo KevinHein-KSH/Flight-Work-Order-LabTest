@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using backend.Data;
-using LabTest.backend.Models.DTOs;
-using LabTest.backend.Models.Entities;
-using LabTest.backend.Models.Enums;
+using LabTest.Data;
+using LabTest.Models.DTOs;
+using LabTest.Models.Entities;
+using LabTest.Models.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
@@ -124,34 +124,6 @@ namespace LabTest.Services
             return response;
         }
 
-        // private static ParsedWorkOrderModel ParseRaw(string raw)
-        // {
-        //     if (string.IsNullOrWhiteSpace(raw)) return new ParsedWorkOrderModel();
-        //     var result = new ParsedWorkOrderModel();
-        //     var parts = raw.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        //     foreach (var part in parts)
-        //     {
-        //         var p = part.Trim();
-        //         if (p.Length < 4) continue;
-        //         var key = new string(p.TakeWhile(char.IsLetter).ToArray()).ToUpperInvariant();
-        //         var numPart = new string(p.SkipWhile(char.IsLetter).ToArray());
-        //         if (!int.TryParse(numPart, out var value)) continue;
-
-        //         switch (key)
-        //         {
-        //             case "CHK":
-        //                 result.Chk = value; break;
-        //             case "BAG":
-        //                 result.Bag = value; break;
-        //             case "CLEAN":
-        //                 result.Clean = value; break;
-        //             case "PBB":
-        //                 result.Pbb = value; break;
-        //         }
-        //     }
-        //     return result;
-        // }
-
         public async Task<(bool ok, string? error, WorkOrderPreviewModel? created)> AddWorkOrderAsync(Guid flightId, string? raw)
         {
             if (flightId == Guid.Empty)
@@ -166,7 +138,7 @@ namespace LabTest.Services
             var flightExists = await _context.Flights
                 .AsNoTracking()
                 .AnyAsync(f => f.Id == flightId && f.DeletedAt == null);
-            
+
             if (!flightExists)
             {
                 return (false, "Flight not found.", null);
@@ -181,7 +153,7 @@ namespace LabTest.Services
             await _context.WorkOrders.Where(w => w.FlightId == flightId && w.DeletedAt == null && w.UpdatedAt == null)
                 .ExecuteUpdateAsync(s => s.SetProperty(w => w.UpdatedAt, _ => now));
 
-           
+
             var activeWorkOrder = new WorkOrder
             {
                 Id = Guid.NewGuid(),
@@ -210,66 +182,6 @@ namespace LabTest.Services
 
             return (true, null, created);
         }
-
-        // {
-        //     parsed = new ParsedWorkOrderModel();
-        //     error = string.Empty;
-        //     if (string.IsNullOrWhiteSpace(raw))
-        //     {
-        //         error = "Raw command is empty.";
-        //         return false;
-        //     }
-
-        //     int? chk = null, bag = null, clean = null, pbb = null;
-        //     var parts = raw.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        //     foreach (var part in parts)
-        //     {
-        //         var p = part.Trim();
-        //         var key = new string(p.TakeWhile(char.IsLetter).ToArray()).ToUpperInvariant();
-        //         var numPart = new string(p.SkipWhile(char.IsLetter).ToArray());
-
-        //         if (string.IsNullOrWhiteSpace(key)) continue; // skip garbage
-        //         if (!int.TryParse(numPart, out var value))
-        //         {
-        //             error = $"Invalid numeric value for '{key}'.";
-        //             return false;
-        //         }
-        //         if (value < 0)
-        //         {
-        //             error = $"Negative value is not allowed for '{key}'.";
-        //             return false;
-        //         }
-
-        //         switch (key)
-        //         {
-        //             case "CHK":
-        //                 chk = value; break;
-        //             case "BAG":
-        //                 bag = value; break;
-        //             case "CLEAN":
-        //                 clean = value; break;
-        //             case "PBB":
-        //                 if (value is not (0 or 90 or 180 or 270))
-        //                 {
-        //                     error = "PBB must be one of 0, 90, 180, 270.";
-        //                     return false;
-        //                 }
-        //                 pbb = value; break;
-        //             default:
-        //                 // ignore unknown tokens to be lenient
-        //                 break;
-        //         }
-        //     }
-
-        //     if (chk == null && bag == null && clean == null && pbb == null)
-        //     {
-        //         error = "No valid commands found in raw string.";
-        //         return false;
-        //     }
-
-        //     parsed = new ParsedWorkOrderModel { Chk = chk, Bag = bag, Clean = clean, Pbb = pbb };
-        //     return true;
-        // }
         private static IEnumerable<(string key, string numPart)> Tokens(string rawCmd)
         {
             if (string.IsNullOrWhiteSpace(rawCmd)) yield break;
@@ -284,7 +196,7 @@ namespace LabTest.Services
                     yield return (keyPart, numPart);
             }
         }
-        
+
         private static ParsedWorkOrderModel ParseRaw(string raw)
         {
             var result = new ParsedWorkOrderModel();
@@ -340,8 +252,8 @@ namespace LabTest.Services
 
                 switch (key)
                 {
-                    case "CHK":   chk = value; break;
-                    case "BAG":   bag = value; break;
+                    case "CHK": chk = value; break;
+                    case "BAG": bag = value; break;
                     case "CLEAN": clean = value; break;
                     case "PBB":
                         if (value is not (0 or 90 or 180 or 270))

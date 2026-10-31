@@ -19,7 +19,7 @@ A small full‑stack application to manage flights and attach validated work‑o
 
 ## Tech Stack
 - Frontend: React 19, Vite, TypeScript, MUI, TanStack Query, Axios
-- Backend: ASP.NET Core 8, EF Core (SQLite), AutoMapper, Swagger
+- Backend: ASP.NET Core 8, EF Core (SQLite), Swagger
 
 ## Getting Started
 

@@ -1,21 +1,17 @@
+using LabTest.Models.DTOs;
 using LabTest.Services;
-using AutoMapper;
-using LabTest.backend.Models.DTOs;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LabTest.Backend.Controllers
+namespace LabTest.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class FlightController : ControllerBase
     {
         private readonly FlightServices flightServices;
-        private readonly IMapper mapper;
-        public FlightController(FlightServices flightServices, IMapper mapper)
+        public FlightController(FlightServices flightServices)
         {
             this.flightServices = flightServices;
-            this.mapper = mapper;
         }
         [HttpGet]
         public async Task<IActionResult> GetAllFlights([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 5)
