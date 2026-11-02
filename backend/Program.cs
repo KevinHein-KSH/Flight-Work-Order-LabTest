@@ -12,6 +12,8 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 
 // Register repositories here, e.g.:
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IFlightRepository, FlightRepository>();
+builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
 builder.Services.AddScoped<FlightServices>();
 builder.Services.AddScoped<WorkOrderServices>();
 

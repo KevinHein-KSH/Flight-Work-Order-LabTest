@@ -1,28 +1,22 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using LabTest.Data;
+using LabTest.Repositories.IRepositories;
 using LabTest.Models.DTOs;
 using LabTest.Models.Entities;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 
 namespace LabTest.Services
 {
     public class FlightServices
     {
-        private readonly AppDbContext _context;
+        private readonly IFlightRepository _flightRepository;
         private static string BuildFlightKey(string flightNumber, DateTime scheduledUtc, string origin, string destination)
             => $"{flightNumber.ToUpperInvariant()}|{scheduledUtc.ToUniversalTime():o}|{origin.ToUpperInvariant()}|{destination.ToUpperInvariant()}";
 
-        public FlightServices(AppDbContext context)
+        public FlightServices(IFlightRepository flightRepository)
         {
-            _context = context;
+            _flightRepository = flightRepository;
         }
 
         public async Task<PagedResult<ResponseFlightModel>> GetFlightsAsync(int pageNumber = 1, int pageSize = 5)
@@ -30,36 +24,11 @@ namespace LabTest.Services
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 5;
 
-            var query = _context.Flights
-                .AsNoTracking() // read only
-                .Where(f => f.DeletedAt == null);
-
-            var totalCount = await query.CountAsync();
-
-            var items = await query
-                .OrderByDescending(f => f.CreatedAt)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(f => new ResponseFlightModel
-                {
-                    Id = f.Id,
-                    FlightNumber = f.FlightNumber,
-                    ScheduledArrivalTimeUtc = f.ScheduledArrivalTimeUtc,
-                    OriginAirport = f.OriginAirport,
-                    DestinationAirport = f.DestinationAirport,
-                    CreatedAt = f.CreatedAt,
-                    LastActiveWO = _context.WorkOrders
-                        .AsNoTracking()
-                        .Where(w => w.FlightId == f.Id && w.DeletedAt == null && w.UpdatedAt == null)
-                        .OrderByDescending(w => w.CreatedAt)
-                        .Select(w => (DateTime?)w.CreatedAt)
-                        .FirstOrDefault()
-                })
-                .ToListAsync();
+            var (items, totalItems) = await _flightRepository.GetPagedAsync(pageNumber, pageSize);
 
             return new PagedResult<ResponseFlightModel>
             {
-                TotalCount = totalCount,
+                TotalCount = totalItems,
                 PageNumber = pageNumber,
                 PageSize = pageSize,
                 Items = items
@@ -80,11 +49,7 @@ namespace LabTest.Services
             var addedFlights = new List<Flight>();
 
             // Build composite keys of existing flights to detect exact duplicates (all fields match)
-            var existingFlights = await _context.Flights
-                .AsNoTracking()
-                .Where(f => f.DeletedAt == null)
-                .Select(f => new { f.FlightNumber, f.ScheduledArrivalTimeUtc, f.OriginAirport, f.DestinationAirport })
-                .ToListAsync();
+            var existingFlights = await _flightRepository.GetAllExistingAsync();
 
             var existingFlightNumbers = new HashSet<string>(
                 existingFlights.Select(f => BuildFlightKey(f.FlightNumber, f.ScheduledArrivalTimeUtc, f.OriginAirport, f.DestinationAirport)),
@@ -230,8 +195,8 @@ namespace LabTest.Services
                 return result;
             }
 
-            await _context.Flights.AddRangeAsync(addedFlights);
-            await _context.SaveChangesAsync();
+            await _flightRepository.AddRangeAsync(addedFlights);
+            await _flightRepository.SaveChangesAsync();
 
             result.Count = addedFlights.Count;
             return result;

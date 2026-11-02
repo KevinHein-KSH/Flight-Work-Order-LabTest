@@ -1,51 +1,21 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using LabTest.Data;
 using LabTest.Models.DTOs;
 using LabTest.Models.Entities;
 using LabTest.Models.Enums;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
+using LabTest.Repositories.IRepositories;
 
 namespace LabTest.Services
 {
     // Template service mirroring FlightServices patterns for WorkOrders
     public class WorkOrderServices
     {
-        private readonly AppDbContext _context;
+        private readonly IFlightRepository _flightRepository;
+        private readonly IWorkOrderRepository _workOrderRepository;
 
-        public WorkOrderServices(AppDbContext context)
+        public WorkOrderServices(IFlightRepository flightRepository, IWorkOrderRepository workOrderRepository)
         {
-            _context = context;
-        }
-
-        // Paged list of non-deleted work orders for a flight, ordered by CreatedAt
-        public async Task<PagedResult<WorkOrder>> GetWorkOrdersAsync(Guid flightId, int pageNumber = 1, int pageSize = 5)
-        {
-            if (pageNumber < 1) pageNumber = 1;
-            if (pageSize < 1) pageSize = 5;
-
-            var query = _context.WorkOrders
-                .AsNoTracking()
-                .Where(w => w.DeletedAt == null && w.FlightId == flightId);
-
-            var totalCount = await query.CountAsync();
-
-            var items = await query
-                .OrderBy(w => w.CreatedAt)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return new PagedResult<WorkOrder>
-            {
-                TotalCount = totalCount,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                Items = items
-            };
+            _flightRepository = flightRepository;
+            _workOrderRepository = workOrderRepository;
         }
 
         // Get a flight with its work orders preview and the active work order
@@ -54,48 +24,18 @@ namespace LabTest.Services
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 5;
 
-            var flight = await _context.Flights
-                .AsNoTracking()
-                .Where(f => f.DeletedAt == null && f.Id == flightId)
-                .Select(f => new
-                {
-                    f.Id,
-                    f.FlightNumber,
-                    f.ScheduledArrivalTimeUtc,
-                    f.OriginAirport,
-                    f.DestinationAirport
-                })
-                .FirstOrDefaultAsync();
+            var flight = await _flightRepository.GetExistingByIdAsync(flightId);
 
             if (flight == null)
             {
                 return null;
             }
 
-            var baseQuery = _context.WorkOrders
-                .AsNoTracking()
-                .Where(w => w.DeletedAt == null && w.FlightId == flightId);
+            var active = await _workOrderRepository.GetActiveAsync(flightId);
 
-            var active = await baseQuery
-                .Where(w => w.UpdatedAt == null)
-                .FirstOrDefaultAsync();
+            var totalCount = await _workOrderRepository.CountAsync(flightId);
 
-            var totalCount = await baseQuery.CountAsync();
-
-            var items = await baseQuery
-                .OrderByDescending(w => w.CreatedAt)
-                .Where(w => w.UpdatedAt != null)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(w => new WorkOrderPreviewModel
-                {
-                    Id = w.Id,
-                    Raw = w.RawCommand,
-                    Parsed = ParseRaw(w.RawCommand),
-                    CreatedAt = w.CreatedAt,
-                    UpdatedAt = w.UpdatedAt
-                })
-                .ToListAsync();
+            var items = await _workOrderRepository.GetHistoryPagedAsync(flightId, pageNumber, pageSize);
 
             var response = new FlightWorkOrdersResponse
             {
@@ -109,7 +49,15 @@ namespace LabTest.Services
                     TotalCount = totalCount,
                     PageNumber = pageNumber,
                     PageSize = pageSize,
-                    Items = items
+                    Items = items.Select(w => new WorkOrderPreviewModel
+                    {
+                        Id = w.Id,
+                        Raw = w.RawCommand,
+                        Parsed = ParseRaw(w.RawCommand),
+                        CreatedAt = w.CreatedAt,
+                        UpdatedAt = w.UpdatedAt
+                    }).ToList()
+
                 },
                 ActiveWorkOrder = active == null ? null : new WorkOrderPreviewModel
                 {
@@ -135,9 +83,7 @@ namespace LabTest.Services
                 return (false, "Raw command is required.", null);
             }
 
-            var flightExists = await _context.Flights
-                .AsNoTracking()
-                .AnyAsync(f => f.Id == flightId && f.DeletedAt == null);
+            var flightExists = await _flightRepository.ExistsAsync(flightId);
 
             if (!flightExists)
             {
@@ -150,9 +96,7 @@ namespace LabTest.Services
             }
 
             var now = DateTime.UtcNow;
-            await _context.WorkOrders.Where(w => w.FlightId == flightId && w.DeletedAt == null && w.UpdatedAt == null)
-                .ExecuteUpdateAsync(s => s.SetProperty(w => w.UpdatedAt, _ => now));
-
+            await _workOrderRepository.CloseActiveAsync(flightId, now);
 
             var activeWorkOrder = new WorkOrder
             {
@@ -168,8 +112,8 @@ namespace LabTest.Services
                 UpdatedAt = null,
             };
 
-            _context.WorkOrders.Add(activeWorkOrder);
-            await _context.SaveChangesAsync();
+            await _workOrderRepository.AddAsync(activeWorkOrder);
+            await _workOrderRepository.SaveChangesAsync();
 
             var created = new WorkOrderPreviewModel
             {
