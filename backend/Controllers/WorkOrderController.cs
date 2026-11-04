@@ -10,17 +10,17 @@ namespace LabTest.Controllers
     [Route("api/[controller]")]
     public class WorkOrderController : ControllerBase
     {
-        private readonly WorkOrderServices workOrderServices;
-        public WorkOrderController(WorkOrderServices workOrderServices)
+        private readonly WorkOrderService workOrderService;
+        public WorkOrderController(WorkOrderService workOrderService)
         {
-            this.workOrderServices = workOrderServices;
+            this.workOrderService = workOrderService;
         }
 
         // GET api/workorder/by-flight/{flightId}?pageNumber=1&pageSize=5
         [HttpGet("flight/{flightId}")]
         public async Task<IActionResult> GetByFlightId(Guid flightId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 5)
         {
-            var result = await workOrderServices.GetByFlightIdAsync(flightId, pageNumber, pageSize);
+            var result = await workOrderService.GetByFlightIdAsync(flightId, pageNumber, pageSize);
             if (result == null)
             {
                 return NotFound();
@@ -32,7 +32,7 @@ namespace LabTest.Controllers
         [HttpPost("{flightId}")]
         public async Task<IActionResult> AddByFlightId(Guid flightId, [FromBody] AddWorkOrderRequest request)
         {
-            var (ok, error, created) = await workOrderServices.AddWorkOrderAsync(flightId, request?.Raw);
+            var (ok, error, created) = await workOrderService.AddWorkOrderAsync(flightId, request?.Raw);
             if (!ok)
             {
                 return BadRequest(error);

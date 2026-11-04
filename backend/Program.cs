@@ -14,8 +14,8 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IFlightRepository, FlightRepository>();
 builder.Services.AddScoped<IWorkOrderRepository, WorkOrderRepository>();
-builder.Services.AddScoped<FlightServices>();
-builder.Services.AddScoped<WorkOrderServices>();
+builder.Services.AddScoped<FlightService>();
+builder.Services.AddScoped<WorkOrderService>();
 
 // CORS policy for frontend dev server
 builder.Services.AddCors(options =>

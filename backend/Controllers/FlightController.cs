@@ -8,15 +8,15 @@ namespace LabTest.Controllers
     [Route("api/[controller]")]
     public class FlightController : ControllerBase
     {
-        private readonly FlightServices flightServices;
-        public FlightController(FlightServices flightServices)
+        private readonly FlightService flightService;
+        public FlightController(FlightService flightService)
         {
-            this.flightServices = flightServices;
+            this.flightService = flightService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAllFlights([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 5)
         {
-            var flights = await flightServices.GetFlightsAsync(pageNumber, pageSize);
+            var flights = await flightService.GetFlightsAsync(pageNumber, pageSize);
             return Ok(flights);
         }
 
@@ -24,7 +24,7 @@ namespace LabTest.Controllers
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> BulkUploadFlights(IFormFile? file)
         {
-            BulkUploadResult result = await flightServices.BulkUploadAsync(file);
+            BulkUploadResult result = await flightService.BulkUploadAsync(file);
             if (!result.AnyInserted)
             {
                 return BadRequest(result.Errors.Count > 0 ? string.Join("; ", result.Errors) : "No valid flight records found.");
