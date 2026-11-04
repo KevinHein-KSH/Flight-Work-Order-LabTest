@@ -42,3 +42,9 @@ frontend/.vite/
 frontend/.next/
 frontend/.nuxt/
 
+# ---- Claude Code ----
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.mcp.json
+
